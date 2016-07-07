@@ -32,7 +32,9 @@ int main(int argc,char* argv[])
 	short port=atoi(argv[2]);
 	udp_server _se(ip,port);
 	_se.init();
-	
+
+	daemon(0,0);
+		
 	pthread_t tid1;
 	pthread_t tid2;
 	pthread_create(&tid1,NULL,recv,(void*)&_se);

@@ -1,19 +1,23 @@
 #!/bin/bash
 ROOT_PATH=$(pwd)
-CONF=$ROOT_PATH/conf/server.conf
+CONF=$ROOT_PATH/../conf/server.conf
 PROC=$(basename $0)
-BIN=$ROOT_PATH/udp_server
-SERVER_PID=
+BIN=$ROOT_PATH/../udp_server
+SERVER_PID=0
+
 function check_server()
 {
 	name=$(basename $BIN)
 	#procpid
+#	echo $name
 	is_exit=$(pidof $name)
+#	echo $is_exit
 	#check is_exit is null?
 	if [ -z "$is_exit" ];then
-		SERVER_PID=$is_exit 
+#		echo $SERVER_PID
 		return 1
 	fi
+	SERVER_PID=$is_exit 
 	return 0
 }
 
@@ -23,8 +27,10 @@ function server_start()
 		echo "server is already exit"
 		return 1
 	fi
-	_ip=$(grep -E 'SERVER_IP:' $CONF)
-	_port=$(grep -E 'SERVER_PORT:' $CONNF | 'awk -F: {print $NF}')
+	_ip=$(grep -E 'SERVER_IP:' $CONF | awk -F: '{print $NF}')
+	echo $_ip
+	_port=$(grep -E 'SERVER_PORT:' $CONF | awk -F: '{print $NF}')
+	echo $_port
 	$BIN $_ip $_port
 	if check_server ;then
 		echo "server is start success..."
@@ -38,6 +44,7 @@ function server_stop()
 		echo "server is not ext"
 		return 1
 	fi
+	echo $SERVER_PID
 	kill -9 $SERVER_PID
 	if check_server ;then
 		echo "server is stop fail..."
@@ -52,7 +59,7 @@ function server_restart()
 }
 function server_stats()
 {
-	if check_server ;then
+	if  check_server ;then
 		echo "server is runing,proc_pid:$SERVER_PID"
 	else
 		echo "server is not exit..."
@@ -66,22 +73,22 @@ function Usage()
 		exit 1
 	fi
 	case $1 in
-		"start | -s" )
+		"start" | "-s" )
 			server_start
 			;;
-		"stop | -t" )
+		"stop" | "-t" )
 			server_stop
 			;;
-		"restart | -r" )
+		"restart" | "-r" )
 			server_restart
 			;;
-		"stats | -a" )
+		"stats" | "-a" )
 			server_stats
 			;;
 		*)
-			Usage
+			echo "Usage:[ip][port][start/-s | stop/-t | restart/-r | stats/-a]"
 			exit 0
 		;;
 	esac
 }
-Usage
+Usage $@

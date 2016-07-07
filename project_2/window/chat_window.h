@@ -5,7 +5,8 @@
 #include<ncurses.h>
 #include<pthread.h>
 #include<unistd.h>
-#define _SIZE_ 1024
+#include"comm.h"
+//#define _SIZE_ 1024
 using namespace std;
 class chat_window
 {
