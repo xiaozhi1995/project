@@ -8,6 +8,7 @@
 #include<string>
 #include<stdlib.h>
 #include"comm.h"
+#include"udp_data.h"
 #define _IP_ "127.0.0.1"
 #define _PORT_ 8080
 class udp_client

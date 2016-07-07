@@ -45,7 +45,7 @@ int udp_server::send_data(struct sockaddr_in& client,socklen_t size,string& msg)
 		print_log(strerror(errno),__FUNCTION__,__LINE__);
 	}
 
-	cout<<"send"<<endl;
+//	cout<<"send"<<endl;
 	return _s;
 }
 int udp_server::recv_data()
