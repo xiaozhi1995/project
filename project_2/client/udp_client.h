@@ -7,6 +7,7 @@
 #include<string.h>
 #include<string>
 #include<stdlib.h>
+#include<vector>
 #include"comm.h"
 #include"udp_data.h"
 #include"chat_window.h"

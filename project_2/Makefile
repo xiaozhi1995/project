@@ -35,24 +35,24 @@ CLI_OBJ=$(CLI_SRC:.cpp=.o)
 all:$(SERVER_BIN) $(CLIENT_BIN)
 
 $(SERVER_BIN):$(SER_OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)  /home/xiaozhi/LinuxStudy/project_2/lib/lib/libjsoncpp.a
+	@$(CC) -o $@ $^ $(LDFLAGS)  /home/xiaozhi/LinuxStudy/project_2/lib/lib/libjsoncpp.a
 $(CLIENT_BIN):$(CLI_OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)  /home/xiaozhi/LinuxStudy/project_2/lib/lib/libjsoncpp.a
+	@$(CC) -o $@ $^ $(LDFLAGS)  /home/xiaozhi/LinuxStudy/project_2/lib/lib/libjsoncpp.a
 
 %.o:$(COMM)/%.cpp
-	$(CC) -c $< $(INCLUDE) 
+	@$(CC) -c $< $(INCLUDE) 
 
 %.o:$(DATA_POOL)/%.cpp
-	$(CC) -c $< $(INCLUDE)
+	@$(CC) -c $< $(INCLUDE)
 
 %.o:$(WINDOW)/%.cpp
-	$(CC) -c $< $(INCLUDE)
+	@$(CC) -c $< $(INCLUDE)
 
 %.o:$(SERVER)/%.cpp
-	$(CC) -c $< $(INCLUDE)
+	@$(CC) -c $< $(INCLUDE)
 
 %.o:$(CLIENT)/%.cpp
-	$(CC) -c $< $(INCLUDE)
+	@$(CC) -c $< $(INCLUDE)
 
 .PHONY:output
 output:all
@@ -81,5 +81,5 @@ debug:
 
 .PHONY:clean
 clean:
-	rm -f *.o $(SERVER_BIN)  $(CLIENT_BIN)
+	@rm -f *.o $(SERVER_BIN)  $(CLIENT_BIN)
 

@@ -7,7 +7,9 @@ chat_window::chat_window()
 }
 void chat_window::put_str_to_win(WINDOW* _win,int _y,int _x,const string& msg)
 {
+	pthread_mutex_lock(&mutex);
 	mvwaddstr(_win,_y,_x,msg.c_str());//mv window  add str :C function
+	pthread_mutex_unlock(&mutex);
 }
 string chat_window::get_str_from_win(WINDOW* _win)
 {

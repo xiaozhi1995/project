@@ -61,7 +61,7 @@ int udp_server::recv_data()
 		string out=buf;
 		pool.data_put(out);
 		string key_ip=inet_ntoa(remote.sin_addr);
-		add_user(key_ip,remote);
+		this->add_user(key_ip,remote);
 	}
 	else if(_s==0)
 	{
@@ -77,6 +77,7 @@ int udp_server::broadcast()
 {
 	string msg;
 	pool.data_get(msg);
+//	cout<<msg<<endl;
 	map<string,struct sockaddr_in>::iterator iter=user_online.begin();
 	for(;iter!=user_online.end();++iter)
 	{

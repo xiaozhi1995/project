@@ -33,7 +33,7 @@ int main(int argc,char* argv[])
 	udp_server _se(ip,port);
 	_se.init();
 
-	daemon(0,0);
+//	daemon(0,0);
 		
 	pthread_t tid1;
 	pthread_t tid2;

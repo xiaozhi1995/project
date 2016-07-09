@@ -31,6 +31,7 @@ void* draw_output(void* arg)
 	_win->create_output();
 	string outmsg;
 	string show_msg;
+	string list;
 	int _max_y;
 	int _max_x;
 	getmaxyx(_win->header,_max_y,_max_x);
@@ -41,6 +42,7 @@ void* draw_output(void* arg)
     string _msg;
     string _school;
     string _cmd;
+
 	while(1)
 	{
 		usleep(10000);
@@ -48,12 +50,17 @@ void* draw_output(void* arg)
 
 	    _cl.recv_data(outmsg);
 		ud.data_to_value(_name,_msg,_school,_cmd,outmsg);
+		
+		show_msg=_name+"_"+_school+":"+_msg;
 
-		show_msg=_name+_school+":"+_msg;
 		_win->put_str_to_win(_win->output,_y,_x,show_msg);
 
 		_y++;
-		_y%=_max_y;
+		if(_y==_max_y)
+		{
+			_win->clear_win_line(_win->output,1,_max_y-2);
+			_y=1;
+		}
 		usleep(10000);
 		_win->fflush_win(_win->output);
 	}
@@ -62,10 +69,20 @@ void* draw_friends_list(void* arg)
 {
 	chat_window* _win=(chat_window*)arg;
 	_win->create_friends_list();
+
+	int _max_y;
+	int _max_x;
+	getmaxyx(_win->header,_max_y,_max_x);
+
+	int _y=1;
+	int _x=1;
 	while(1)
 	{
 		usleep(1000000);
+		_y=1;
 		_win->fflush_win(_win->friends_list);
+
+		_win->clear_win_line(_win->friends_list,1,_y);
 	}
 }
 void* draw_input(void* arg)
@@ -81,18 +98,21 @@ void* draw_input(void* arg)
     string _school=ud.school;
     string _cmd=ud.cmd;
 	string _out;//send msg jsoncpp
+	string list;
 	while(1)
 	{
 		usleep(1000000);
 		_win->put_str_to_win(_win->input,1,1,_line);
 		_win->fflush_win(_win->input);
 		_msg=_win->get_str_from_win(_win->input);
-		
-
+		list=_name+"_"+_school;
+		if(_msg=="quit"||_msg=="q")
+		{
+		}
 		ud.data_to_string(_name,_msg,_school,_cmd,_out);
 		_cl.send_data(_out);
 		
-		_win->clear_win_line(_win->input,1,1);
+		_win->clear_win_line(_win->input,1,2);
 		usleep(1000);
 		_win->put_str_to_win(_win->input,1,1,_line);
 		_win->fflush_win(_win->input);
@@ -112,7 +132,8 @@ void* draw_input(void* arg)
 //	pthread_join(ti,NULL);
 //	return 0;
 //}
-//
+
+
 int main()
 {
 	_cl.init();
@@ -170,8 +191,9 @@ int main()
 ////	ud.data_to_value(_name,_msg,_school,_cmd,_out);
 ////	cout<<_out<<endl;
 ////	cout<<_name;
-//
+//	_out="";
 //    _cl.recv_data(_out);
+//	cout<<_out<<endl;
 //    ud.data_to_value(_name,_msg,_school,_cmd,_out);
 //    
 //    cout<<"name: "<<_name<<endl;
@@ -185,6 +207,7 @@ int main()
 //		ud.data_to_string(_name,_msg,_school,_cmd,_out);
 //
 //		_cl.send_data(_out);
+//		_out="";
 //		_cl.recv_data(_out);
 //		ud.data_to_value(_name,_msg,_school,_cmd,_out);
 //

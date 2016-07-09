@@ -18,7 +18,7 @@ void data_pool::data_put(string& _in)
 void data_pool::data_get(string& _out)
 {
 	sem_wait(&get_sem);//p
-	pool[get_index++]=_out;
+	_out=pool[get_index++];
 	get_index%=capacity;
 	sem_post(&put_sem);//v
 }
