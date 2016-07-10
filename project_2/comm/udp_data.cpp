@@ -1,5 +1,6 @@
 #include"udp_data.h"
-udp_data::udp_data()
+udp_data::udp_data(const char* _cmd)
+:cmd(_cmd)
 {}
 void udp_data::data_to_string(string& _in_name,string& _in_msg,string& _in_school,string _in_cmd,string& _out_str)
 {

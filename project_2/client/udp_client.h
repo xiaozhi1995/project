@@ -1,3 +1,4 @@
+#pragma once
 #include<iostream>
 #include<sys/types.h>
 #include<sys/socket.h>
@@ -16,6 +17,9 @@
 class udp_client
 {
 	public:
+		vector<string> fri_list;
+		void add_fri_list(const string& _win_f);
+		void del_fri_list(const string& _win_f);
 		udp_client(string _ip=_IP_,short _port=_PORT_);
 		void init();
 		int send_data(string& _in);

@@ -4,6 +4,30 @@ udp_client::udp_client(string _ip,short _port)
 ,port(_port)
 ,sock(-1)
 {}
+void udp_client::add_fri_list(const string& _win_f)
+{
+	vector<string>::iterator _iter=fri_list.begin();
+	for(;_iter!=fri_list.end();++_iter)
+	{
+		if(*_iter==_win_f)
+			return;
+	}
+	fri_list.push_back(_win_f);
+}
+void udp_client::del_fri_list(const string& _win_f)
+{
+	vector<string>::iterator _iter=fri_list.begin();
+	for(;_iter!=fri_list.end();)
+	{
+		if(*_iter==_win_f)
+		{
+			_iter=fri_list.erase(_iter);
+			break;
+		}
+		else
+			++_iter;
+	}
+}
 void udp_client::init()
 {
 	sock=socket(AF_INET,SOCK_DGRAM,0);

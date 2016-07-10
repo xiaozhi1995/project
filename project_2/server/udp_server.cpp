@@ -36,6 +36,17 @@ void udp_server::add_user(string& ip,struct sockaddr_in& client)
 	else
 		return;
 }
+void udp_server::del_user(string& ip,string& out)
+{
+	string _name;
+	string _msg;
+	string _school;
+	string _cmd;
+	udp_data _data;
+	_data.data_to_value(_name,_msg,_school,_cmd,out);
+	if(_cmd=="QUIT")
+		user_online.erase(ip);
+}
 int udp_server::send_data(struct sockaddr_in& client,socklen_t size,string& msg)
 {
 
@@ -61,7 +72,9 @@ int udp_server::recv_data()
 		string out=buf;
 		pool.data_put(out);
 		string key_ip=inet_ntoa(remote.sin_addr);
+
 		this->add_user(key_ip,remote);
+		this->del_user(key_ip,out);
 	}
 	else if(_s==0)
 	{
