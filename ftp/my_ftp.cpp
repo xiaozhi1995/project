@@ -1,138 +1,176 @@
 #include"my_ftp.h"
-void Usage(const char* proc)
+const int SIZE=1024;
+int interact(int sock,const char* input,char* output)
 {
-	cout<<"Usage:"<<proc<<" [ip] [username] [passwd] [filename]"<<endl;
+	int ret=send(sock,input,strlen(input),0);
+	if(ret<0)
+	{
+		perror(strerror(errno));
+		return ret;
+	}
+	ret=recv(sock,output,SIZE,0);
+	if(ret<0)
+	{
+		perror(strerror(errno));
+		return ret;
+	}
+	output[ret]='\0';
+	return 0;
+}
+int start_listen(int sock,sockaddr_in& local)
+{
+	int server=socket(AF_INET,SOCK_STREAM,0);
+	if(server<0)
+	{
+		perror(strerror(errno));
+		return -1;
+	}
+	socklen_t len=sizeof(local);
+	int ret=getsockname(sock,(sockaddr*)&local,&len);
+	if(ret<0)
+	{
+		perror("getsockname");
+		return -1;
+	}
+	local.sin_port=0;//random
+	ret=bind(server,(sockaddr*)&local,sizeof(local));
+	if(ret<0)
+	{
+		perror("bind");
+		return -1;
+	}
+	ret=listen(server,5);
+	if(ret<0)
+	{
+		perror("listen");
+		return -1;
+	}
+	ret=getsockname(server,(sockaddr*)&local,&len);
+	if(ret<0)
+	{
+		perror("getsockname");
+		return -1;
+	}
+	return server;
+}
+int recv_data(int data_sock,const char* filename)
+{
+	FILE* fp=fopen(filename,"w");
+	if(fp==NULL)
+	{
+		perror("fopen");
+		return -1;
+	}
+	ssize_t _s=-1;
+	while(1)
+	{
+		char buf[SIZE];
+		_s=recv(data_sock,buf,SIZE,0);
+		if(_s<0)
+		{
+			perror("recv");
+			close(data_sock);
+			return _s;
+		}
+		else if(_s==0)
+		{
+			close(data_sock);
+			fclose(fp);
+			return 0;
+		}
+		if(fwrite(buf,_s,1,fp)!=1)
+		{
+			close(data_sock);
+			fclose(fp);
+			return -1;
+		}
+	}
 }
 int main(int argc,char* argv[])
 {
 	if(argc!=5)
 	{
-		Usage(argv[0]);
-		exit(1);
+		cout<<"Usage: [ip] [user] [pass] [filename]"<<endl;
+		return -1;
 	}
 	int sock=socket(AF_INET,SOCK_STREAM,0);
-	struct sockaddr_in server;
-	server.sin_family=AF_INET;
-	server.sin_port=htons(21);
-	server.sin_addr.s_addr=inet_addr(argv[1]);
-	socklen_t len=sizeof(server);
-
-
-	if(connect(sock,(struct sockaddr*)&server,len)<0)
+	if(sock<0)
 	{
-		perror(strerror(errno));
-		exit(2);
+		perror("socket");
+		return -1;
 	}
-	char buf[1024];
-	char _msg[1024];
-	ssize_t _s;
-	memset(buf,'\0',sizeof(buf));
-	memset(_msg,'\0',sizeof(_msg));
-	_s=recv(sock,buf,sizeof(buf)-1,0);
-	if(_s==0)
+	sockaddr_in server_addr;
+	server_addr.sin_family=AF_INET;
+	server_addr.sin_addr.s_addr=inet_addr(argv[1]);
+	server_addr.sin_port=htons(21);
+	int ret=connect(sock,(sockaddr*)&server_addr,sizeof(server_addr));
+	if(ret<0)
 	{
-		cout<<"server is close";
-		exit(-1);
+		perror("connect");
+		return 2;
 	}
-	else if(_s<0)
+	char buf[SIZE];
+	char output[SIZE];
+	ssize_t _s=recv(sock,buf,SIZE,0);
+	if(_s<0)
 	{
-		perror(strerror(errno));
-		exit(-2);
+		perror("recv");
+		return _s;
 	}
+	buf[_s]='\0';
 	cout<<buf<<endl;
-	/* 命令 ”USER username\r\n” */	
-	sprintf(_msg,"USER %s\r\n",argv[2]);
-	send(sock,_msg,strlen(_msg),0);
-	memset(buf,'\0',sizeof(buf));
-	recv(sock,buf,sizeof(buf)-1,0);
-	cout<<buf<<endl;
-	
-	/* 命令 ”PASS passwd\r\n” */	
-	sprintf(_msg,"PASS %s\r\n",argv[3]);
-	send(sock,_msg,strlen(_msg),0);
-	memset(buf,'\0',sizeof(buf));
-	recv(sock,buf,sizeof(buf)-1,0);
-	cout<<buf<<endl;
-
-
-	int ser_sock=socket(AF_INET,SOCK_STREAM,0);
-	if(ser_sock<0)
+	sprintf(buf,"USER %s\r\n",argv[2]);
+	if(interact(sock,buf,output)<0)
 	{
-		perror(strerror(errno));
-		exit(4);
+		perror("USER");
+		return -1;
 	}
-	struct sockaddr_in local;
-	socklen_t l_len=sizeof(local);
-	local.sin_family=AF_INET;
-	local.sin_port=0;
-	if(getsockname(sock,(struct sockaddr*)&local,&l_len)<0)
+	cout<<output<<endl;
+	sprintf(buf,"PASS %s\r\n",argv[3]);
+	if(interact(sock,buf,output)<0)
 	{
-		perror(strerror(errno));
-		exit(3);
+		perror("PASS");
+		return -1;
 	}
-	bind(ser_sock,(struct sockaddr*)&local,l_len);
-	listen(ser_sock,5);
-	if(getsockname(ser_sock,(struct sockaddr*)&local,&l_len)<0)
+	cout<<output<<endl;
+	
+	sockaddr_in local_addr;
+	int listen_sock=start_listen(sock,local_addr);
+	if(listen_sock<0)
 	{
-		perror(strerror(errno));
-		exit(3);
+		perror("start_listen");
+		return -1;
 	}
-//	cout<<"get sockname"<<endl;
-
-
-	//ip port
-	unsigned char* _addr=(unsigned char*)&local.sin_addr.s_addr;
-	short _port=ntohs(local.sin_port);
-	sprintf(_msg,"PORT %d,%d,%d,%d,%d,%d\r\n",_addr[0],_addr[1],_addr[2],_addr[3],_port/256,_port%256);
-	send(sock,_msg,strlen(_msg),0);
-	
-	cout<<"send success"<<endl;
-		
-	
-	memset(buf,'\0',sizeof(buf));
-	recv(sock,buf,sizeof(buf)-1,0);
+	unsigned char* _ip=(unsigned char*)&local_addr.sin_addr.s_addr;
+	unsigned short _port=ntohs(local_addr.sin_port);
+	sprintf(buf, "PORT %d,%d,%d,%d,%d,%d\r\n", _ip[0], _ip[1], _ip[2],_ip[3],_port/256,_port%256);
 	cout<<buf<<endl;
-	cout<<"port reply"<<endl;
-	//file name
-	sprintf(_msg,"RETR %s\r\n",argv[4]);
-	send(sock,_msg,strlen(_msg),0);
-	
-	//reply
-	memset(buf,'\0',sizeof(buf));	
-	recv(sock,buf,sizeof(buf)-1,0);
-	cout<<buf<<endl;
-	//connect
-	memset(buf,'\0',sizeof(buf));
-	recv(sock,buf,sizeof(buf)-1,0);
-	cout<<buf<<endl;
-	
-	
-	accept(sock,(struct sockaddr*)&local,&l_len);
-	//send file
-	FILE* fp=fopen("tmp","w");
-	if(fp==NULL)
+	if(interact(sock,buf,output)<0)
 	{
-		perror(strerror(errno));
-		exit(4);
+		cout<<"interact"<<endl;
+		return -1;
 	}
-	ssize_t _fs=-1;
-	while((_fs=recv(sock,buf,sizeof(buf)-1,0))>0)
+	cout<<output<<endl;
+	sprintf(buf,"RETR %s\r\n",argv[4]);
+	if(interact(sock,buf,output)<0)
 	{
-		fwrite(buf,_fs,1,fp);
-		memset(buf,'\0',sizeof(buf));
+		cout<<"interact"<<endl;
+		return -1;
 	}
-
-	sprintf(_msg,"BYE\r\n");
-	send(sock,_msg,strlen(_msg),0);
-//	sprintf(_msg,"PASV\r\n");
-//	send(sock,_msg,strlen(_msg),0);
-//	/* 客户端告诉服务器用被动模式 */
-//	
-//	memset(buf,'\0',sizeof(buf));
-//	recv(sock,buf,sizeof(buf)-1,0);
-//	/*客户端接收服务器的响应码和新开的端口号，
-//	* 正常为 ”227 Entering passive mode (<h1,h2,h3,h4,p1,p2>)” */
-//
-//	cout<<buf<<endl;
+	cout<<output<<endl;
+	sockaddr_in ser_addr;
+	socklen_t ser_len=sizeof(ser_addr);
+	int data_sock=accept(listen_sock,(sockaddr*)&ser_addr,&ser_len);
+	if(data_sock<0)
+	{
+		perror("accept");
+		return -1;
+	}
+	close(listen_sock);
+	ret=recv_data(data_sock,argv[4]);
+	if (ret < 0) {
+		cout << "recv data error" << endl;
+		}
+	close(sock);
 	return 0;
 }
